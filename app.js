@@ -14,12 +14,24 @@ $("questionForm").addEventListener("submit",e=>{
  const type=$("type").value, options=$("options").value.trim();
  if(type==="MCQ"&&!options){toast("MCQ के विकल्प भी लिखें");return}
  questions.unshift({id:Date.now(),subject:$("subject").value.trim(),chapter:$("chapter").value.trim(),type,question:$("question").value.trim(),answer:$("answer").value.trim(),options,page:$("pageNo").value.trim(),wrong:false,created:Date.now()});
- save();e.target.reset();$("optionsWrap").style.display="block";toast("प्रश्न सेव हो गया");
+ save();
+ // Clear every entry field after a successful save.
+ e.target.reset();
+ $("optionsWrap").style.display="block";
+ $("subject").focus();
+ toast("प्रश्न सेव हो गया — फॉर्म खाली कर दिया गया");
 });
 function typeName(t){return ({MCQ:"MCQ",FILL:"Fill in the blanks",TF:"True / False",SHORT:"Short answer"})[t]||t}
 function card(q,withControls=true){
  const d=document.createElement("article");d.className="q-card";
- d.innerHTML=`<div class="q-meta">${esc(q.subject)} › ${esc(q.chapter)} · ${typeName(q.type)} ${q.page?`· पेज ${esc(q.page)}`:""} ${q.wrong?'· <b style="color:#b13b43">गलत चिह्नित</b>':""}</div><h4>${esc(q.question)}</h4>${q.options?`<div class="q-options">${esc(q.options)}</div>`:""}<div class="answer" hidden><b>सही उत्तर:</b><br>${esc(q.answer)}</div><div class="q-actions"><button class="show-answer">उत्तर दिखाएँ</button>${withControls?`<button class="speak-question">🔊 प्रश्न सुनें</button><button class="voice-answer">🎙️ बोलकर उत्तर</button><button class="wrong">${q.wrong?"गलत सूची से हटाएँ":"गलत प्रश्न में जोड़ें"}</button>`:""}</div><div class="feedback" aria-live="polite"></div>`;
+ d.innerHTML=`<div class="q-meta">${esc(q.subject)} › ${esc(q.chapter)} · ${typeName(q.type)} ${q.page?`· पेज ${esc(q.page)}`:""} ${q.wrong?'· <b style="color:#b13b43">गलत चिह्नित</b>':""}</div><h4>${esc(q.question)}</h4>${q.options?`<div class="q-options">${esc(q.options)}</div>`:""}<div class="answer" hidden><b>सही उत्तर:</b><br>${esc(q.answer)}</div><div class="q-actions"><button class="show-answer">उत्तर दिखाएँ</button>${withControls?`<button class="speak-question">🔊 प्रश्न सुनें</button><button class="voice-answer">🎙️ बोलकर उत्तर</button><button class="wrong">${q.wrong?"गलत सूची से हटाएँ":"गलत प्रश्न में जोड़ें"}</button>`:""}<button class="delete-question">🗑️ डिलीट</button></div><div class="feedback" aria-live="polite"></div>`;
+ d.querySelector(".delete-question").onclick=()=>{
+   if(confirm("क्या आप इस प्रश्न को हमेशा के लिए डिलीट करना चाहते हैं?")){
+     questions=questions.filter(item=>item.id!==q.id);
+     save();
+     toast("प्रश्न डिलीट कर दिया गया");
+   }
+ };
  d.querySelector(".show-answer").onclick=()=>{const a=d.querySelector(".answer");a.hidden=!a.hidden;d.querySelector(".show-answer").textContent=a.hidden?"उत्तर दिखाएँ":"उत्तर छिपाएँ"};
  const speak=(txt)=>{if(!("speechSynthesis"in window)){toast("इस ब्राउज़र में आवाज़ उपलब्ध नहीं");return}speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(txt);u.lang="hi-IN";speechSynthesis.speak(u)};
  d.querySelector(".speak-question").onclick=()=>speak(q.question);

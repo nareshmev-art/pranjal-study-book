@@ -1,0 +1,17 @@
+{
+  "name": "Pranjal Study Book",
+  "short_name": "Study Book",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f4f6fb",
+  "theme_color": "#243b80",
+  "description": "आपकी निजी ऑफलाइन पढ़ाई की ऐप",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

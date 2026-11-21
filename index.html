@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="hi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#243b80">
+  <meta name="description" content="Pranjal Study Book - आपकी निजी ऑफलाइन पढ़ाई की ऐप">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <title>Pranjal Study Book</title>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">P</div>
+      <div><h1>Pranjal Study Book</h1><p>आपकी अपनी Study साथी</p></div>
+    </div>
+    <span class="offline-pill" id="connectionState">ऑफलाइन तैयार</span>
+  </header>
+
+  <main class="wrap">
+    <nav class="tabs" aria-label="मुख्य मेनू">
+      <button class="tab active" data-page="home">होम</button>
+      <button class="tab" data-page="add">प्रश्न जोड़ें</button>
+      <button class="tab" data-page="revise">रिवीजन</button>
+      <button class="tab" data-page="scan">स्कैन</button>
+    </nav>
+
+    <section id="home" class="page active">
+      <div class="hero">
+        <div><span class="eyebrow">WELCOME BACK</span><h2>आज क्या पढ़ना है?</h2>
+        <p>अपने प्रश्न सेव करें और कभी भी दोहराएँ।</p></div>
+        <div class="hero-mark">📚</div>
+      </div>
+      <div class="stats">
+        <article class="stat"><span>कुल प्रश्न</span><strong id="totalCount">0</strong></article>
+        <article class="stat"><span>गलत चिह्नित</span><strong id="wrongCount">0</strong></article>
+        <article class="stat"><span>विषय</span><strong id="subjectCount">0</strong></article>
+      </div>
+      <div class="panel">
+        <div class="section-head"><div><h3>हाल के प्रश्न</h3><p>आपके सेव किए हुए प्रश्न</p></div><button class="text-btn" data-goto="revise">सभी देखें →</button></div>
+        <div id="recentList" class="question-list empty">अभी कोई प्रश्न नहीं है। “प्रश्न जोड़ें” से शुरुआत करें।</div>
+      </div>
+      <div class="panel backup-panel">
+        <div><h3>आपका डेटा सुरक्षित रखें</h3><p>फोन बदलने या ब्राउज़र डेटा मिटने से पहले बैकअप डाउनलोड करें।</p></div>
+        <div class="button-row"><button class="secondary" id="exportBtn">बैकअप डाउनलोड</button><label class="secondary file-label">बैकअप वापस लाएँ<input id="importFile" type="file" accept="application/json"></label></div>
+      </div>
+    </section>
+
+    <section id="add" class="page">
+      <div class="page-title"><span class="eyebrow">QUESTION BANK</span><h2>नया प्रश्न जोड़ें</h2><p>प्रश्न और पुस्तक में दिया गया उत्तर ज्यों का त्यों लिखें।</p></div>
+      <form id="questionForm" class="panel form-panel">
+        <label>Subject / विषय<input id="subject" required placeholder="जैसे: Science"></label>
+        <label>Chapter / अध्याय<input id="chapter" required placeholder="जैसे: Chapter 1 - Plants"></label>
+        <label>प्रश्न का प्रकार<select id="type">
+          <option value="MCQ">Tick the correct option (MCQ)</option>
+          <option value="FILL">Fill in the blanks</option>
+          <option value="TF">True / False</option>
+          <option value="SHORT">Short answer</option>
+        </select></label>
+        <label>प्रश्न<textarea id="question" rows="3" required placeholder="यहाँ पूरा प्रश्न लिखें"></textarea></label>
+        <div id="optionsWrap"><label>MCQ विकल्प <small>(हर विकल्प नई लाइन में)</small><textarea id="options" rows="4" placeholder="Option A&#10;Option B&#10;Option C&#10;Option D"></textarea></label></div>
+        <label>सही उत्तर<textarea id="answer" rows="3" required placeholder="सही उत्तर लिखें"></textarea></label>
+        <label>पुस्तक का पेज नंबर <small>(वैकल्पिक)</small><input id="pageNo" inputmode="numeric" placeholder="जैसे: 24"></label>
+        <button class="primary full" type="submit">प्रश्न सेव करें</button>
+        <p class="hint">यह डेटा इसी ब्राउज़र और इसी फोन में सेव होगा। समय-समय पर बैकअप लें।</p>
+      </form>
+    </section>
+
+    <section id="revise" class="page">
+      <div class="page-title"><span class="eyebrow">PRACTICE TIME</span><h2>रिवीजन करें</h2><p>विषय, अध्याय और प्रश्न के प्रकार के अनुसार अभ्यास करें।</p></div>
+      <div class="filters panel">
+        <label>Subject<select id="filterSubject"><option value="">सभी विषय</option></select></label>
+        <label>Chapter<select id="filterChapter"><option value="">सभी अध्याय</option></select></label>
+        <label>Question type<select id="filterType"><option value="">सभी प्रकार</option><option value="MCQ">MCQ</option><option value="FILL">Fill in the blanks</option><option value="TF">True / False</option><option value="SHORT">Short answer</option></select></label>
+        <label class="check-label"><input type="checkbox" id="wrongOnly"> केवल गलत प्रश्न</label>
+      </div>
+      <div class="quiz-tools"><span id="resultCount">0 प्रश्न</span><button class="secondary" id="shuffleBtn">मिक्स करें</button></div>
+      <div id="revisionList" class="question-list empty">अभी अभ्यास के लिए प्रश्न नहीं हैं।</div>
+    </section>
+
+    <section id="scan" class="page">
+      <div class="page-title"><span class="eyebrow">BOOK SCANNER</span><h2>Chapter स्कैन करें</h2><p>अभी फ़ाइल चुनकर रख सकते हैं; किताब से अपने-आप उत्तर निकालने की सुविधा अगले चरण में जोड़ी जाएगी।</p></div>
+      <div class="panel scan-panel">
+        <div class="scan-icon">📷</div>
+        <h3>Chapter के पन्ने चुनें</h3>
+        <p>कैमरा या Gallery से तस्वीरें चुनें। PDF भी चुनी जा सकती है।</p>
+        <label class="primary file-label full">फोटो / PDF चुनें<input id="scanFiles" type="file" accept="image/*,application/pdf" capture="environment" multiple></label>
+        <div id="scanPreview" class="scan-preview"></div>
+        <div class="notice"><strong>ज़रूरी जानकारी</strong><br>इस शुरुआती वेब संस्करण में OCR और exercise के उत्तरों का automatic matching अभी चालू नहीं है। चुनी गई फ़ाइलें अपने-आप प्रश्न बैंक में नहीं जुड़ेंगी।</div>
+      </div>
+    </section>
+
+    <footer>Pranjal Study Book · निजी उपयोग के लिए</footer>
+  </main>
+  <div id="toast" role="status" class="toast"></div>
+  <script src="app.js"></script>
+</body>
+</html>

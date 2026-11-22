@@ -51,7 +51,12 @@
     <section id="add" class="page">
       <div class="page-title"><span class="eyebrow">QUESTION BANK</span><h2>नया प्रश्न जोड़ें</h2><p>प्रश्न और पुस्तक में दिया गया उत्तर ज्यों का त्यों लिखें।</p></div>
       <form id="questionForm" class="panel form-panel">
-        <label>Subject / विषय<input id="subject" required placeholder="जैसे: Science"></label>
+        <label>Subject / विषय<select id="subject" required>
+          <option value="">विषय चुनें</option>
+          <option>Computer</option><option>English Reader</option><option>English Grammar</option>
+          <option>EVS</option><option>GK</option><option>Hindi</option>
+          <option>Hindi Vyakaran</option><option>Maths</option>
+        </select></label>
         <label>Chapter / अध्याय<input id="chapter" required placeholder="जैसे: Chapter 1 - Plants"></label>
         <label>प्रश्न का प्रकार<select id="type">
           <option value="MCQ">Tick the correct option (MCQ)</option>

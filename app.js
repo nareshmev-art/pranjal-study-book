@@ -1,7 +1,18 @@
 const KEY="pranjal-study-book-v1";
 let questions=load();
 const $=id=>document.getElementById(id);
-function load(){try{return JSON.parse(localStorage.getItem(KEY)||"[]")}catch{return []}}
+const SUBJECTS=["Computer","English Reader","English Grammar","EVS","GK","Hindi","Hindi Vyakaran","Maths"];
+function load(){
+ try {
+   const saved=JSON.parse(localStorage.getItem(KEY)||"[]");
+   if(!Array.isArray(saved)) return [];
+   // पुराने प्रश्नों को उनके जोड़े जाने के क्रम में स्थायी नंबर दें।
+   const ordered=[...saved].sort((a,b)=>(a.created||a.id||0)-(b.created||b.id||0));
+   let next=1;
+   ordered.forEach(q=>{if(!Number.isFinite(q.serialNo)) q.serialNo=next; next=Math.max(next,q.serialNo+1)});
+   return saved;
+ } catch { return [] }
+}
 function save(){localStorage.setItem(KEY,JSON.stringify(questions));renderAll()}
 function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 function toast(s){const t=$("toast");t.textContent=s;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2300)}
@@ -13,18 +24,23 @@ $("questionForm").addEventListener("submit",e=>{
  e.preventDefault();
  const type=$("type").value, options=$("options").value.trim();
  if(type==="MCQ"&&!options){toast("MCQ के विकल्प भी लिखें");return}
- questions.unshift({id:Date.now(),subject:$("subject").value.trim(),chapter:$("chapter").value.trim(),type,question:$("question").value.trim(),answer:$("answer").value.trim(),options,page:$("pageNo").value.trim(),wrong:false,created:Date.now()});
+ const now=Date.now();
+ const nextNumber=questions.reduce((max,q)=>Math.max(max,Number(q.serialNo)||0),0)+1;
+ questions.unshift({id:now,serialNo:nextNumber,subject:$("subject").value,chapter:$("chapter").value.trim(),type,question:$("question").value.trim(),answer:$("answer").value.trim(),options,page:$("pageNo").value.trim(),wrong:false,created:now});
  save();
- // Clear every entry field after a successful save.
- e.target.reset();
- $("optionsWrap").style.display="block";
- $("subject").focus();
- toast("प्रश्न सेव हो गया — फॉर्म खाली कर दिया गया");
+ // केवल प्रश्न-संबंधी फील्ड साफ करें; विषय, अध्याय और प्रकार अगले प्रश्न के लिए बने रहें।
+ $("question").value="";
+ $("options").value="";
+ $("answer").value="";
+ $("pageNo").value="";
+ $("optionsWrap").style.display=type==="MCQ"?"block":"none";
+ $("question").focus();
+ toast(`प्रश्न क्रमांक ${nextNumber} सेव हो गया`);
 });
 function typeName(t){return ({MCQ:"MCQ",FILL:"Fill in the blanks",TF:"True / False",SHORT:"Short answer"})[t]||t}
 function card(q,withControls=true){
  const d=document.createElement("article");d.className="q-card";
- d.innerHTML=`<div class="q-meta">${esc(q.subject)} › ${esc(q.chapter)} · ${typeName(q.type)} ${q.page?`· पेज ${esc(q.page)}`:""} ${q.wrong?'· <b style="color:#b13b43">गलत चिह्नित</b>':""}</div><h4>${esc(q.question)}</h4>${q.options?`<div class="q-options">${esc(q.options)}</div>`:""}<div class="answer" hidden><b>सही उत्तर:</b><br>${esc(q.answer)}</div><div class="q-actions"><button class="show-answer">उत्तर दिखाएँ</button>${withControls?`<button class="speak-question">🔊 प्रश्न सुनें</button><button class="voice-answer">🎙️ बोलकर उत्तर</button><button class="wrong">${q.wrong?"गलत सूची से हटाएँ":"गलत प्रश्न में जोड़ें"}</button>`:""}<button class="delete-question">🗑️ डिलीट</button></div><div class="feedback" aria-live="polite"></div>`;
+ d.innerHTML=`<div class="q-meta"><strong class="question-number">प्रश्न ${esc(q.serialNo||"–")}</strong> · ${esc(q.subject)} › ${esc(q.chapter)} · ${typeName(q.type)} ${q.page?`· पेज ${esc(q.page)}`:""} ${q.wrong?'· <b style="color:#b13b43">गलत चिह्नित</b>':""}</div><h4>${esc(q.question)}</h4>${q.options?`<div class="q-options">${esc(q.options)}</div>`:""}<div class="answer" hidden><b>सही उत्तर:</b><br>${esc(q.answer)}</div><div class="q-actions"><button class="show-answer">उत्तर दिखाएँ</button>${withControls?`<button class="speak-question">🔊 प्रश्न सुनें</button><button class="voice-answer">🎙️ बोलकर उत्तर</button><button class="wrong">${q.wrong?"गलत सूची से हटाएँ":"गलत प्रश्न में जोड़ें"}</button>`:""}<button class="delete-question">🗑️ डिलीट</button></div><div class="feedback" aria-live="polite"></div>`;
  d.querySelector(".delete-question").onclick=()=>{
    if(confirm("क्या आप इस प्रश्न को हमेशा के लिए डिलीट करना चाहते हैं?")){
      questions=questions.filter(item=>item.id!==q.id);
@@ -54,16 +70,17 @@ function renderAll(){
  const recent=$("recentList");recent.innerHTML="";if(!questions.length){recent.className="question-list empty";recent.textContent="अभी कोई प्रश्न नहीं है। “प्रश्न जोड़ें” से शुरुआत करें।"}else{recent.className="question-list";questions.slice(0,3).forEach(q=>recent.append(card(q,false)))}
  fillFilters();renderRevision();
 }
-function fillFilters(){
- const subjects=[...new Set(questions.map(q=>q.subject))].sort();
+function fillFilters(resetChapter=false){
  const oldS=$("filterSubject").value,oldC=$("filterChapter").value;
- $("filterSubject").innerHTML='<option value="">सभी विषय</option>'+subjects.map(s=>`<option>${esc(s)}</option>`).join("");
- $("filterSubject").value=subjects.includes(oldS)?oldS:"";
- const chapters=[...new Set(questions.filter(q=>!$("filterSubject").value||q.subject===$("filterSubject").value).map(q=>q.chapter))].sort();
- $("filterChapter").innerHTML='<option value="">सभी अध्याय</option>'+chapters.map(s=>`<option>${esc(s)}</option>`).join("");
- $("filterChapter").value=chapters.includes(oldC)?oldC:"";
+ // सभी तय विषय हमेशा दिखें, भले उनमें अभी प्रश्न न जोड़े गए हों।
+ $("filterSubject").innerHTML='<option value="">All Subjects</option>'+SUBJECTS.map(s=>`<option value="${esc(s)}">${esc(s)}</option>`).join("");
+ $("filterSubject").value=SUBJECTS.includes(oldS)?oldS:"";
+ // अध्याय सेव किए गए प्रश्नों से लिए जाते हैं; चुने विषय के अनुसार सूची बदलती है।
+ const chapters=[...new Set(questions.filter(q=>!$("filterSubject").value||q.subject===$("filterSubject").value).map(q=>q.chapter).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+ $("filterChapter").innerHTML='<option value="">All Chapters</option>'+chapters.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join("");
+ $("filterChapter").value=!resetChapter&&chapters.includes(oldC)?oldC:"";
 }
-["filterSubject","filterChapter","filterType","wrongOnly"].forEach(id=>$(id).addEventListener("change",()=>{if(id==="filterSubject")fillFilters();renderRevision()}));
+["filterSubject","filterChapter","filterType","wrongOnly"].forEach(id=>$(id).addEventListener("change",()=>{if(id==="filterSubject")fillFilters(true);renderRevision()}));
 function renderRevision(){
  if(!$("revisionList"))return;
  const list=questions.filter(q=>(!$("filterSubject").value||q.subject===$("filterSubject").value)&&(!$("filterChapter").value||q.chapter===$("filterChapter").value)&&(!$("filterType").value||q.type===$("filterType").value)&&(!$("wrongOnly").checked||q.wrong));
